@@ -18,7 +18,7 @@ pipeline {
             steps {
                 script {
                     // Build the Docker image
-                    sh 'docker build -t utkarshns/jenkins-ts .'
+                    sh 'docker build -t utkarshns/jenkins-ts:V1 .'
                 }
             }
         }
@@ -29,7 +29,7 @@ pipeline {
                    withCredentials([usernamePassword(credentialsId: 'docker-creds', passwordVariable: 'dockerpass', usernameVariable: 'dockeruser')]) {
                         sh'docker login -u ${dockeruser} -p ${dockerpass}'
 }
-                        sh'docker push utkarshns/jenkins-ts'
+                        sh'docker push utkarshns/jenkins-ts:V1'
                  
                 }
             }

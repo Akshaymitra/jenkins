@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bruce-deployment
+spec:
+  replicas: 8
+  selector:
+    matchLabels:
+      app: bruce-deployment
+  template:
+    metadata:
+      labels:
+        app: bruce-deployment
+    spec:
+      containers:
+      # - name: server-container
+      #   image: utkarshns/bruce-usercal-api:v1.4
+      #   envFrom:
+      #   - configMapRef:
+      #       name: compute-config
+      #   ports:
+      #   - containerPort: 8000
+      
+      - name: rabbitmq-container
+        image: rabbitmq:3-management
+        ports:
+        - containerPort: 15672
+      - name: redis-container
+        image: utkarshns/bruce-db-redis
+        env:
+        - name: REDIS_ARGS
+          value: "--requirepass utkarsh$1234"
+        ports:
+        - containerPort: 8001
+        volumeMounts:
+        - name: redis-data-volume
+          mountPath: /data
+      - name: compute-container
+        image: ${COMPUTE_IMAGE}:latest
+        envFrom:
+        - configMapRef:
+            name: compute-config
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "12Gi"
+            cpu: "12"
+
+      - name: cbm-scheduler
+        image: utkarshns/bruce-cbm-scheduler:latest
+        envFrom:
+        - configMapRef:
+            name: compute-config
+        # ports:
+        # - containerPort: 80
+        # resources:
+        #   requests:
+        #     memory: "12Gi"
+        #     cpu: "12"
+      imagePullSecrets:
+      - name: dockerhub-secrets
+      volumes:
+      - name: redis-data-volume
+        persistentVolumeClaim:
+          claimName: bruce-db-pvc
